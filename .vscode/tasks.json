@@ -1,0 +1,26 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "start backend",
+      "type": "shell",
+      "command": "uvicorn backend.main:app --reload --port 8000"
+    },
+    {
+      "label": "start scheduler",
+      "type": "shell",
+      "command": "uvicorn scheduler.main:app --reload --port 8001",
+      "problemMatcher": []
+    },
+    {
+      "label": "start both",
+      "dependsOn": [
+        "start backend",
+        "start scheduler"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
