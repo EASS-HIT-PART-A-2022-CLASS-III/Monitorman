@@ -24,14 +24,14 @@ async def check_all_repeat():
     await check_all()
 
 
-async def check_all():
+async def check_all(force_check: bool = False):
     results = []
     logger.info('started checking all')
 
     async for monitor in db[MONITORS_DB_NAME].find():
         monitorModel = MonitorModel.parse_obj(monitor)
 
-        if len(monitorModel.results) >= 1 and (datetime.now()-monitorModel.results[0].time).total_seconds() > monitorModel.minute_interval*60:
+        if force_check or (len(monitorModel.results) >= 1 and (datetime.now()-monitorModel.results[0].time).total_seconds() > monitorModel.minute_interval*60):
             res = await check_and_save(monitorModel)
             results.append(res)
 
@@ -56,14 +56,14 @@ async def check_and_save(monitorModel: MonitorModel):
     return ret
 
 
-@router.get("/", response_model=list[ResultModel])
+@ router.get("/", response_model=list[ResultModel])
 async def trigger_check_all() -> list[ResultModel]:
-    results = await check_all()
+    results = await check_all(True)
 
     return results
 
 
-@router.get("/{monitor_id}", response_model=ResultModel)
+@ router.get("/{monitor_id}", response_model=ResultModel)
 async def trigger_monitor(monitor_id: str) -> ResultModel:
     logger.info(f'trigger {monitor_id}')
 
