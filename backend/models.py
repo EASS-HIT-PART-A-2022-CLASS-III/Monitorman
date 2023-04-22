@@ -1,9 +1,10 @@
 from typing import Dict, Literal, Optional
+
 from bson import ObjectId
 from pydantic import BaseModel
 
 
-class UpdateStudentModel(BaseModel):
+class UpdateMonitorModel(BaseModel):
     description: Optional[str]
     url: Optional[str]
     method: Optional[Literal['GET', 'POST']]
@@ -26,7 +27,7 @@ class UpdateStudentModel(BaseModel):
                 "expected_status": 200,
                 "expected_result_regex": "^.+$",
                 "expected_headers_regex": {},
-                "max_duration_ms": 60,
+                "max_duration_ms": 60*1000,
                 "minute_interval": 5,
             }
         }

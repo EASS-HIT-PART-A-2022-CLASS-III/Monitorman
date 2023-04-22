@@ -1,9 +1,10 @@
+import mongomock
 from fastapi.testclient import TestClient
 
 from shared.mongoparams import MONGO_DB_NAME, MONITORS_COLLECTION_NAME
+
 from ..main import app
 from ..routers.scheduler import get_prod_client
-import mongomock
 
 mongo_test_client = mongomock.MongoClient()
 

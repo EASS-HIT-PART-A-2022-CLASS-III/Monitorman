@@ -1,14 +1,15 @@
-from datetime import datetime
+import logging
 import math
-from fastapi import APIRouter, Depends, HTTPException
+import os
+from datetime import datetime
+
 import pymongo
-from shared.models import MonitorModel, ResultModel
 import requests
 from dotenv import load_dotenv
-import os
-import logging
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.tasks import repeat_every
 
+from shared.models import MonitorModel, ResultModel
 from shared.mongoparams import MONGO_DB_NAME, MONITORS_COLLECTION_NAME
 
 logger = logging.getLogger('app')
@@ -24,8 +25,31 @@ def get_prod_client():
 
 @router.on_event('startup')
 @repeat_every(seconds=60)
-def check_all():
+def check_all_repeat():
     check_all(get_prod_client())
+
+
+@router.get("/", response_model=list[ResultModel])
+def trigger_check_all(client: pymongo.MongoClient = Depends(get_prod_client)) -> list[ResultModel]:
+    results = check_all(client, True)
+
+    return results
+
+
+@router.get("/{monitor_id}", response_model=ResultModel)
+def trigger_monitor(monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)) -> ResultModel:
+    logger.info(f'trigger {monitor_id}')
+    db = client[MONGO_DB_NAME]
+
+    if (monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": monitor_id})) is not None:
+        monitorModel = MonitorModel.parse_obj(monitor)
+
+        ret = check_and_save(client, monitorModel)
+
+        return ret
+
+    raise HTTPException(
+        status_code=404, detail=f"Monitor {monitor_id} not found")
 
 
 def check_all(client: pymongo.MongoClient, force_check: bool = False):
@@ -60,26 +84,3 @@ def check_and_save(client: pymongo.MongoClient, monitorModel: MonitorModel):
         {"_id": str(monitorModel.id)}, {'$push': {'results': {'$each': [ret.dict()], '$position': 0}}}, upsert=True)
 
     return ret
-
-
-@router.get("/", response_model=list[ResultModel])
-def trigger_check_all(client: pymongo.MongoClient = Depends(get_prod_client)) -> list[ResultModel]:
-    results = check_all(client, True)
-
-    return results
-
-
-@ router.get("/{monitor_id}", response_model=ResultModel)
-def trigger_monitor(monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)) -> ResultModel:
-    logger.info(f'trigger {monitor_id}')
-    db = client[MONGO_DB_NAME]
-
-    if (monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": monitor_id})) is not None:
-        monitorModel = MonitorModel.parse_obj(monitor)
-
-        ret = check_and_save(client, monitorModel)
-
-        return ret
-
-    raise HTTPException(
-        status_code=404, detail=f"Monitor {monitor_id} not found")
