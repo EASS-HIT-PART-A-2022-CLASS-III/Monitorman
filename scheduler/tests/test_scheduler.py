@@ -1,10 +1,10 @@
 import mongomock
 from fastapi.testclient import TestClient
+import pytest
 
-from shared.mongoparams import MONGO_DB_NAME, MONITORS_COLLECTION_NAME
+from shared.mongo import MONGO_DB_NAME, MONITORS_COLLECTION_NAME, get_prod_client
 
 from ..main import app
-from ..routers.scheduler import get_prod_client
 
 mongo_test_client = mongomock.MongoClient()
 
@@ -15,10 +15,13 @@ def get_mongo_test_client():
 
 app.dependency_overrides[get_prod_client] = get_mongo_test_client
 
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    # clean db before every test
+    mongo_test_client.drop_database(MONGO_DB_NAME)
+    yield
 
 def test_id_not_found():
-    mongo_test_client.drop_database(MONGO_DB_NAME)
-
     nonexistent_id = '12345678'
     client = TestClient(app)
     response = client.get(f'/scheduler/{nonexistent_id}')
@@ -28,8 +31,6 @@ def test_id_not_found():
 
 
 def test_monitor_success():
-    mongo_test_client.drop_database(MONGO_DB_NAME)
-    
     db = mongo_test_client[MONGO_DB_NAME]
     collection = db[MONITORS_COLLECTION_NAME]
     monitor_id = "666f6f2d6261722d71757578"
@@ -43,8 +44,6 @@ def test_monitor_success():
 
 
 def test_trigger_all_empty():
-    mongo_test_client.drop_database(MONGO_DB_NAME)
-
     client = TestClient(app)
     response = client.get('/scheduler/')
 

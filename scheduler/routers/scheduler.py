@@ -10,17 +10,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.tasks import repeat_every
 
 from shared.models import MonitorModel, ResultModel
-from shared.mongoparams import MONGO_DB_NAME, MONITORS_COLLECTION_NAME
+from shared.mongo import MONGO_DB_NAME, MONITORS_COLLECTION_NAME, get_prod_client
 
 logger = logging.getLogger('app')
 
 load_dotenv('./scheduler/.env')
 
 router = APIRouter(prefix="/scheduler", tags=["scheduler"])
-
-
-def get_prod_client():
-    return pymongo.MongoClient(host=os.getenv('MONGO_URL'))
 
 
 @router.on_event('startup')

@@ -7,16 +7,11 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from fastapi.encoders import jsonable_encoder
 
 from shared.models import MonitorModel
-from shared.mongoparams import MONGO_DB_NAME, MONITORS_COLLECTION_NAME
+from shared.mongo import MONGO_DB_NAME, MONITORS_COLLECTION_NAME, get_prod_client
 
 from ..models import UpdateMonitorModel
 
 load_dotenv('./backend/.env')
-
-
-def get_prod_client():
-    return pymongo.MongoClient(host=os.getenv('MONGO_URL'))
-
 
 router = APIRouter(prefix="/monitors", tags=["monitors"])
 
