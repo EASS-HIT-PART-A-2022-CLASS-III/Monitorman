@@ -22,6 +22,7 @@ class MonitorModel(BaseModel):
     body: str = ''
     expected_status: Optional[int]
     expected_result_regex: Optional[str]
+    expected_headers_regex: Optional[Dict[str, str]]
     max_duration_ms: Optional[int]
     results: Optional[list[ResultModel]] = []
     minute_interval: Literal[1, 2, 5, 10, 30, 60]
@@ -36,6 +37,10 @@ class MonitorModel(BaseModel):
                 "url": "http://httpbin.org/post",
                 "method": "POST",
                 "body": "{\"hello\":\"world\"}",
-                "minute_interval": 5
+                "expected_status": 200,
+                "expected_result_regex": "^.+$",
+                "expected_headers_regex": {},
+                "max_duration_ms": 60,
+                "minute_interval": 5,
             }
         }

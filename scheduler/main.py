@@ -11,6 +11,7 @@ app = FastAPI()
 
 app.include_router(scheduler.router)
 
+
 @app.on_event('startup')
 @repeat_every(seconds=60)
 async def check_all():
