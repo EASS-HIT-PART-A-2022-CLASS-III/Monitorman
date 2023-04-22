@@ -2,14 +2,13 @@ from fastapi import APIRouter, Body, HTTPException, Response, status
 import motor.motor_asyncio
 from fastapi.encoders import jsonable_encoder
 from shared.models import MonitorModel
+from shared.mongoparams import MONITORS_COLLECTION_NAME
 from ..models import UpdateStudentModel
 from dotenv import load_dotenv
 import requests
 import os
 
 load_dotenv('./backend/.env')
-
-MONITORS_DB_NAME = 'monitors'
 
 client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv('MONGO_URL'))
 db = client.project
@@ -19,7 +18,7 @@ router = APIRouter(prefix="/monitors", tags=["monitors"])
 
 @router.get("/getmonitors/{with_results}", response_model=list[MonitorModel])
 async def get_monitors(with_results: bool) -> list[MonitorModel]:
-    monitors = await db[MONITORS_DB_NAME].find({}, projection={} if with_results else {'results': False}).to_list(1000)
+    monitors = await db[MONITORS_COLLECTION_NAME].find({}, projection={} if with_results else {'results': False}).to_list(1000)
 
     return monitors
 

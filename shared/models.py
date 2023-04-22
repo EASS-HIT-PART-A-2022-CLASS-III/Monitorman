@@ -25,7 +25,7 @@ class MonitorModel(BaseModel):
     expected_headers_regex: Optional[Dict[str, str]]
     max_duration_ms: Optional[int]
     results: Optional[list[ResultModel]] = []
-    minute_interval: Literal[1, 2, 5, 10, 30, 60]
+    minute_interval: Literal[1, 2, 5, 10, 30, 60] = 5
 
     class Config:
         allow_population_by_field_name = True

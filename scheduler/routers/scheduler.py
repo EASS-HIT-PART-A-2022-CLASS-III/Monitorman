@@ -9,14 +9,13 @@ import os
 import logging
 from fastapi_utils.tasks import repeat_every
 
+from shared.mongoparams import MONGO_DB_NAME, MONITORS_COLLECTION_NAME
+
 logger = logging.getLogger('app')
 
 load_dotenv('./scheduler/.env')
 
 router = APIRouter(prefix="/scheduler", tags=["scheduler"])
-
-MONITORS_COLLECTION_NAME = 'monitors'
-MONGO_DB_NAME = 'project'
 
 
 def get_prod_client():
