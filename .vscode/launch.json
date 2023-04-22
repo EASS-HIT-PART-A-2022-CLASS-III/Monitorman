@@ -10,7 +10,9 @@
             "request": "launch",
             "module": "uvicorn",
             "args": [
-                "backend.main:app"
+                "backend.main:app",
+                "--port",
+                "8000"
             ],
             "jinja": true,
             "justMyCode": true
@@ -21,7 +23,9 @@
             "request": "launch",
             "module": "uvicorn",
             "args": [
-                "scheduler.main:app"
+                "scheduler.main:app",
+                "--port",
+                "8001"
             ],
             "jinja": true,
             "justMyCode": true

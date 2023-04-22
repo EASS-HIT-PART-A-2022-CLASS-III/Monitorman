@@ -1,45 +1,52 @@
 from datetime import datetime
 import math
-from fastapi import APIRouter, HTTPException
-import motor.motor_asyncio
+from fastapi import APIRouter, Depends, HTTPException
+import pymongo
 from shared.models import MonitorModel, ResultModel
 import requests
 from dotenv import load_dotenv
 import os
 import logging
+from fastapi_utils.tasks import repeat_every
 
 logger = logging.getLogger('app')
 
 load_dotenv('./scheduler/.env')
 
-MONITORS_DB_NAME = 'monitors'
-
-client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv('MONGO_URL'))
-db = client.project
-
 router = APIRouter(prefix="/scheduler", tags=["scheduler"])
 
+MONITORS_COLLECTION_NAME = 'monitors'
+MONGO_DB_NAME = 'project'
 
-async def check_all_repeat():
-    await check_all()
+
+def get_prod_client():
+    return pymongo.MongoClient(host=os.getenv('MONGO_URL'))
 
 
-async def check_all(force_check: bool = False):
-    results = []
+@router.on_event('startup')
+@repeat_every(seconds=60)
+def check_all():
+    check_all(get_prod_client())
+
+
+def check_all(client: pymongo.MongoClient, force_check: bool = False):
     logger.info('started checking all')
+    db = client[MONGO_DB_NAME]
+    results = []
 
-    async for monitor in db[MONITORS_DB_NAME].find():
+    for monitor in db[MONITORS_COLLECTION_NAME].find():
         monitorModel = MonitorModel.parse_obj(monitor)
 
         if force_check or (len(monitorModel.results) >= 1 and (datetime.now()-monitorModel.results[0].time).total_seconds() > monitorModel.minute_interval*60):
-            res = await check_and_save(monitorModel)
+            res = check_and_save(client, monitorModel)
             results.append(res)
 
     return results
 
 
-async def check_and_save(monitorModel: MonitorModel):
+def check_and_save(client: pymongo.MongoClient, monitorModel: MonitorModel):
     logger.info(f'checking monitor {monitorModel.id}')
+    db = client[MONGO_DB_NAME]
 
     res = requests.request(monitorModel.method,
                            monitorModel.url, data=monitorModel.body)
@@ -50,27 +57,28 @@ async def check_and_save(monitorModel: MonitorModel):
                       content=res.text,
                       headers=res.headers)
 
-    await db[MONITORS_DB_NAME].update_one(
+    db[MONITORS_COLLECTION_NAME].update_one(
         {"_id": str(monitorModel.id)}, {'$push': {'results': {'$each': [ret.dict()], '$position': 0}}}, upsert=True)
 
     return ret
 
 
-@ router.get("/", response_model=list[ResultModel])
-async def trigger_check_all() -> list[ResultModel]:
-    results = await check_all(True)
+@router.get("/", response_model=list[ResultModel])
+def trigger_check_all(client: pymongo.MongoClient = Depends(get_prod_client)) -> list[ResultModel]:
+    results = check_all(client, True)
 
     return results
 
 
 @ router.get("/{monitor_id}", response_model=ResultModel)
-async def trigger_monitor(monitor_id: str) -> ResultModel:
+def trigger_monitor(monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)) -> ResultModel:
     logger.info(f'trigger {monitor_id}')
+    db = client[MONGO_DB_NAME]
 
-    if (monitor := await db[MONITORS_DB_NAME].find_one({"_id": monitor_id})) is not None:
+    if (monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": monitor_id})) is not None:
         monitorModel = MonitorModel.parse_obj(monitor)
 
-        ret = await check_and_save(monitorModel)
+        ret = check_and_save(client, monitorModel)
 
         return ret
 
