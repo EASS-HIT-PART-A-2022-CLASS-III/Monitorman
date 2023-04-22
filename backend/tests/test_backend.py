@@ -1,3 +1,4 @@
+import re
 import mongomock
 from fastapi.testclient import TestClient
 import pytest
@@ -17,8 +18,9 @@ app.dependency_overrides[get_prod_client] = get_mongo_test_client
 
 
 @pytest.fixture(autouse=True)
-def run_around_tests():
+def run_around_tests(requests_mock):
     # clean db before every test
+    requests_mock.get(re.compile('/scheduler/*'))
     mongo_test_client.drop_database(MONGO_DB_NAME)
     yield
 
@@ -62,6 +64,7 @@ def test_create_monitor():
     for field in data:
         assert result[field] == data[field]
 
+
 def test_get_monitor():
     client = TestClient(app)
 
@@ -82,7 +85,6 @@ def test_get_monitor():
     response = client.get(f'/monitors/{result["_id"]}')
 
     assert response.status_code == 200
-
 
 
 def test_delete_monitor():
