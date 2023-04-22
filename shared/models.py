@@ -24,6 +24,7 @@ class MonitorModel(BaseModel):
     expected_result_regex: Optional[str]
     max_duration_ms: Optional[int]
     results: Optional[list[ResultModel]] = []
+    minute_interval: Literal[1, 2, 5, 10, 30, 60]
 
     class Config:
         allow_population_by_field_name = True
@@ -35,5 +36,6 @@ class MonitorModel(BaseModel):
                 "url": "http://httpbin.org/post",
                 "method": "POST",
                 "body": "{\"hello\":\"world\"}",
+                "minute_interval": 5
             }
         }

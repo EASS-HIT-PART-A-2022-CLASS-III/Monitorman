@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Body, HTTPException, Response, status
 import motor.motor_asyncio
-from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from shared.models import MonitorModel
 from ..models import UpdateStudentModel
 from dotenv import load_dotenv
+import requests
 import os
 
 load_dotenv('./backend/.env')
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/monitors", tags=["monitors"])
 
 @router.get("/getmonitors/{with_results}", response_model=list[MonitorModel])
 async def get_monitors(with_results: bool) -> list[MonitorModel]:
-    monitors = await db[MONITORS_DB_NAME].find({}, projection= {} if with_results else {'results': False}).to_list(1000)
+    monitors = await db[MONITORS_DB_NAME].find({}, projection={} if with_results else {'results': False}).to_list(1000)
 
     return monitors
 
@@ -34,12 +34,18 @@ async def get_monitor(monitor_id: str) -> MonitorModel:
 
 
 @router.post("/", response_description="Add new monitor", response_model=MonitorModel)
-async def create_monitor(monitor: MonitorModel = Body(...)):
+async def create_monitor(response: Response, monitor: MonitorModel = Body(...)):
     monitor = jsonable_encoder(monitor)
     new_monitor = await db[MONITORS_DB_NAME].insert_one(monitor)
+
+    requests.get(
+        f'{os.getenv("SCHEDULER_URL")}/scheduler/{new_monitor.inserted_id}')
+
     created_monitor = await db[MONITORS_DB_NAME].find_one({"_id": new_monitor.inserted_id})
 
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_monitor)
+    response.status_code = status.HTTP_201_CREATED
+
+    return created_monitor
 
 
 @router.put("/{id}", response_description="Update a monitor", response_model=MonitorModel)
@@ -50,6 +56,8 @@ async def update_monitor(id: str, monitor: UpdateStudentModel = Body(...)):
         update_result = await db[MONITORS_DB_NAME].update_one({"_id": id}, {"$set": monitor})
 
         if update_result.modified_count == 1:
+            requests.get(f'{os.getenv("SCHEDULER_URL")}/scheduler/{id}')
+
             if (
                 updated_monitor := await db[MONITORS_DB_NAME].find_one({"_id": id})
             ) is not None:

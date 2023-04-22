@@ -4,9 +4,11 @@ from fastapi import APIRouter, HTTPException
 import motor.motor_asyncio
 from shared.models import MonitorModel, ResultModel
 import requests
-from fastapi_utils.tasks import repeat_every
 from dotenv import load_dotenv
 import os
+import logging
+
+logger = logging.getLogger('app')
 
 load_dotenv('./scheduler/.env')
 
@@ -17,24 +19,27 @@ db = client.project
 
 router = APIRouter(prefix="/scheduler", tags=["scheduler"])
 
-@router.on_event('startup')
-@repeat_every(seconds=3600)
+
 async def check_all_repeat():
     await check_all()
 
+
 async def check_all():
     results = []
-    print(f'{datetime.now()} started checking all')
+    logger.info('started checking all')
 
     async for monitor in db[MONITORS_DB_NAME].find():
         monitorModel = MonitorModel.parse_obj(monitor)
-        res = await check_and_save(monitorModel)
-        results.append(res)
+
+        if len(monitorModel.results) >= 1 and (datetime.now()-monitorModel.results[0].time).total_seconds() > monitorModel.minute_interval*60:
+            res = await check_and_save(monitorModel)
+            results.append(res)
 
     return results
 
+
 async def check_and_save(monitorModel: MonitorModel):
-    print(f'checking monitor {monitorModel.id}')
+    logger.info(f'checking monitor {monitorModel.id}')
 
     res = requests.request(monitorModel.method,
                            monitorModel.url, data=monitorModel.body)
@@ -60,7 +65,7 @@ async def trigger_check_all() -> list[ResultModel]:
 
 @router.get("/{monitor_id}", response_model=ResultModel)
 async def trigger_monitor(monitor_id: str) -> ResultModel:
-    print(f'trigger {monitor_id}')
+    logger.info(f'trigger {monitor_id}')
 
     if (monitor := await db[MONITORS_DB_NAME].find_one({"_id": monitor_id})) is not None:
         monitorModel = MonitorModel.parse_obj(monitor)

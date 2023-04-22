@@ -7,7 +7,8 @@ class UpdateStudentModel(BaseModel):
     url: Optional[str]
     method: Optional[Literal['GET', 'POST']]
     body: Optional[str]
-
+    minute_interval: Optional[Literal[1, 2, 5, 10, 30, 60]]
+    
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
@@ -17,5 +18,6 @@ class UpdateStudentModel(BaseModel):
                 "url": "http://httpbin.org/post",
                 "method": "POST",
                 "body": "{\"hello\":\"world\"}",
+                "minute_interval": 5
             }
         }
