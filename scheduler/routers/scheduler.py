@@ -67,8 +67,7 @@ def check_and_save(client: pymongo.MongoClient, monitorModel: MonitorModel):
     logger.info(f'checking monitor {monitorModel.id}')
     db = client[MONGO_DB_NAME]
 
-    res = requests.request(monitorModel.method,
-                           monitorModel.url, data=monitorModel.body)
+    res = requests.request(monitorModel.method, monitorModel.url, data=monitorModel.body)
     ret = ResultModel(status=res.status_code,
                       duration_ms=math.floor(
                           res.elapsed.total_seconds()*1000),

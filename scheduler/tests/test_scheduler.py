@@ -13,13 +13,13 @@ def get_mongo_test_client():
     return mongo_test_client
 
 
-app.dependency_overrides[get_prod_client] = get_mongo_test_client
-
 @pytest.fixture(autouse=True)
 def run_around_tests():
+    app.dependency_overrides[get_prod_client] = get_mongo_test_client
     # clean db before every test
     mongo_test_client.drop_database(MONGO_DB_NAME)
     yield
+
 
 def test_id_not_found():
     nonexistent_id = '12345678'
