@@ -27,6 +27,39 @@ def run_around_tests():
     yield
 
 
+def test_create_two_and_schedule_all(monkeypatch):
+    backend_client = TestClient(backend_app, 'http://localhost:8000')
+    scheduler_client = TestClient(scheduler_app, 'http://localhost:8001')
+
+
+    monkeypatch.setattr(requests, 'request', mock_request)
+
+    data = {
+        "description": "this is a test monitor",
+        "url": "http://httpbin.org/post",
+        "method": "POST",
+        "body": "{\"hello\":\"world\"}",
+        "expected_status": 200,
+    }
+
+    with requests_mock.Mocker(real_http=True) as m:
+        m: requests_mock.Mocker
+        m.get(re.compile('/scheduler/*'),
+              json=proxy_scheduler_client(scheduler_client))
+        response = backend_client.post('/monitors', json=data)
+
+        assert response.status_code == 201
+
+        response = backend_client.post('/monitors', json=data)
+
+        assert response.status_code == 201
+
+    response = scheduler_client.get('/scheduler')
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
 def test_create_and_delete_monitor(monkeypatch):
     backend_client = TestClient(backend_app, 'http://localhost:8000')
     scheduler_client = TestClient(scheduler_app, 'http://localhost:8001')
@@ -39,20 +72,7 @@ def test_create_and_delete_monitor(monkeypatch):
         "expected_status": 200,
     }
 
-    def mock_request(*args, **kwargs):
-        res = requests.Response()
-        res.status_code = 200
-
-        return res
-
     monkeypatch.setattr(requests, 'request', mock_request)
-
-    def proxy_scheduler_client(client: TestClient):
-        def proxy(request: _RequestObjectProxy, context: _Context):
-            resp = client.get(request.path)
-
-            return resp.json()
-        return proxy
 
     with requests_mock.Mocker(real_http=True) as m:
         m: requests_mock.Mocker
@@ -69,3 +89,16 @@ def test_create_and_delete_monitor(monkeypatch):
     response = backend_client.delete(f'/monitors/{result["_id"]}')
 
     assert response.status_code == 204
+
+def mock_request(*args, **kwargs):
+    res = requests.Response()
+    res.status_code = 200
+
+    return res
+
+def proxy_scheduler_client(client: TestClient):
+    def proxy(request: _RequestObjectProxy, context: _Context):
+        resp = client.get(request.path)
+
+        return resp.json()
+    return proxy

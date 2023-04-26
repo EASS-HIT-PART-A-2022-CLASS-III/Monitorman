@@ -19,7 +19,7 @@ class MonitorModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     description: str = ''
     url: str
-    method: Literal['GET', 'POST']
+    method: Literal['GET', 'POST', 'PUT', 'DELETE']
     body: str = ''
     expected_status: Optional[int]
     expected_result_regex: Optional[str]

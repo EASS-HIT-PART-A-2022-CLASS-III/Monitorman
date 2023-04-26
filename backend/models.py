@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class UpdateMonitorModel(BaseModel):
     description: Optional[str]
     url: Optional[str]
-    method: Optional[Literal['GET', 'POST']]
+    method: Optional[Literal['GET', 'POST', 'PUT', 'DELETE']]
     body: Optional[str]
     expected_status: Optional[int]
     expected_result_regex: Optional[str]
