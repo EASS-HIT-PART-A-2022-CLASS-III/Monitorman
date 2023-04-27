@@ -1,3 +1,4 @@
+import datetime
 import re
 import mongomock
 from fastapi.testclient import TestClient
@@ -8,6 +9,7 @@ from scheduler.main import app as scheduler_app
 import requests_mock
 from requests_mock.request import _RequestObjectProxy
 from requests_mock.response import _Context
+from shared.models import MonitorModel, ResultModel
 
 from shared.mongo import MONGO_DB_NAME, get_prod_client
 
@@ -27,30 +29,37 @@ def run_around_tests():
     yield
 
 
-def test_create_two_and_schedule_all(monkeypatch):
+@pytest.fixture()
+def example_monitor_dict():
+    monitor = MonitorModel(
+        description="this is a test monitor",
+        url="http://httpbin.org/post",
+        method="POST",
+        body="{\"hello\":\"world\"}",
+        expected_status=200
+    ).dict()
+
+    for field in ['id', 'results']+[field for field in monitor if monitor[field] is None]:
+        monitor.pop(field)
+
+    return monitor
+
+
+def test_create_two_and_schedule_all(monkeypatch, example_monitor_dict):
     backend_client = TestClient(backend_app, 'http://localhost:8000')
     scheduler_client = TestClient(scheduler_app, 'http://localhost:8001')
 
-
     monkeypatch.setattr(requests, 'request', mock_request)
-
-    data = {
-        "description": "this is a test monitor",
-        "url": "http://httpbin.org/post",
-        "method": "POST",
-        "body": "{\"hello\":\"world\"}",
-        "expected_status": 200,
-    }
 
     with requests_mock.Mocker(real_http=True) as m:
         m: requests_mock.Mocker
         m.get(re.compile('/scheduler/*'),
               json=proxy_scheduler_client(scheduler_client))
-        response = backend_client.post('/monitors', json=data)
+        response = backend_client.post('/monitors', json=example_monitor_dict)
 
         assert response.status_code == 201
 
-        response = backend_client.post('/monitors', json=data)
+        response = backend_client.post('/monitors', json=example_monitor_dict)
 
         assert response.status_code == 201
 
@@ -60,17 +69,9 @@ def test_create_two_and_schedule_all(monkeypatch):
     assert len(response.json()) == 2
 
 
-def test_create_and_delete_monitor(monkeypatch):
+def test_create_and_delete_monitor(monkeypatch, example_monitor_dict):
     backend_client = TestClient(backend_app, 'http://localhost:8000')
     scheduler_client = TestClient(scheduler_app, 'http://localhost:8001')
-
-    data = {
-        "description": "this is a test monitor",
-        "url": "http://httpbin.org/post",
-        "method": "POST",
-        "body": "{\"hello\":\"world\"}",
-        "expected_status": 200,
-    }
 
     monkeypatch.setattr(requests, 'request', mock_request)
 
@@ -78,7 +79,7 @@ def test_create_and_delete_monitor(monkeypatch):
         m: requests_mock.Mocker
         m.get(re.compile('/scheduler/*'),
               json=proxy_scheduler_client(scheduler_client))
-        response = backend_client.post('/monitors', json=data)
+        response = backend_client.post('/monitors', json=example_monitor_dict)
 
     assert response.status_code == 201
 
@@ -90,11 +91,13 @@ def test_create_and_delete_monitor(monkeypatch):
 
     assert response.status_code == 204
 
+
 def mock_request(*args, **kwargs):
     res = requests.Response()
     res.status_code = 200
 
     return res
+
 
 def proxy_scheduler_client(client: TestClient):
     def proxy(request: _RequestObjectProxy, context: _Context):
