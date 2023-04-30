@@ -1,4 +1,3 @@
-import datetime
 import re
 import mongomock
 from fastapi.testclient import TestClient
@@ -9,7 +8,7 @@ from scheduler.main import app as scheduler_app
 import requests_mock
 from requests_mock.request import _RequestObjectProxy
 from requests_mock.response import _Context
-from shared.models import MonitorModel, ResultModel
+from shared.models import MonitorModel
 
 from shared.mongo import MONGO_DB_NAME, get_prod_client
 

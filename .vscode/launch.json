@@ -5,12 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Unit Test",
-            "type": "python",
-            "request": "test",
-            "justMyCode": false,
-        },
-        {
             "name": "Python: FastAPI backend",
             "type": "python",
             "request": "launch",
@@ -34,6 +28,21 @@
                 "8001"
             ],
             "jinja": true,
+            "justMyCode": true
+        },
+        {
+            "name": "debug frontend",
+            "type": "python",
+            "request": "launch",
+            "module": "streamlit",
+            "args": [
+                "run",
+                "frontend/main.py",
+                "--server.runOnSave",
+                "true",
+                "--server.port",
+                "8002"
+            ],
             "justMyCode": true
         }
     ]

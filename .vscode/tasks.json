@@ -15,10 +15,17 @@
       "problemMatcher": []
     },
     {
-      "label": "start both",
+      "label": "start frontend",
+      "type": "shell",
+      "command": "streamlit run frontend/main.py --server.port 8002 --server.runOnSave true",
+      "problemMatcher": []
+    },
+    {
+      "label": "start all",
       "dependsOn": [
         "start backend",
-        "start scheduler"
+        "start scheduler",
+        "start frontend",
       ],
       "problemMatcher": []
     }

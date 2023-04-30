@@ -18,6 +18,12 @@ services:
       - 8001:80
     environment:
       - MONGO_URL=mongodb://root:example@mongo:27017/
+  frontend:
+    build:
+      dockerfile: ./frontend/Dockerfile
+      context: .
+    ports:
+      - 8002:80
   mongo:
     image: mongo
     restart: always
