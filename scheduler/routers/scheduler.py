@@ -1,6 +1,5 @@
 import logging
 import math
-import os
 from datetime import datetime
 
 import pymongo
@@ -10,7 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_utils.tasks import repeat_every
 
 from shared.models import MonitorModel, ResultModel
-from shared.mongo import MONGO_DB_NAME, MONITORS_COLLECTION_NAME, get_prod_client
+from shared.mongo import (MONGO_DB_NAME, MONITORS_COLLECTION_NAME,
+                          get_prod_client)
 
 logger = logging.getLogger('app')
 
@@ -67,12 +67,19 @@ def check_and_save(client: pymongo.MongoClient, monitorModel: MonitorModel):
     logger.info(f'checking monitor {monitorModel.id}')
     db = client[MONGO_DB_NAME]
 
-    res = requests.request(monitorModel.method, monitorModel.url, data=monitorModel.body)
+    try:
+        res = requests.request(monitorModel.method,
+                               monitorModel.url, data=monitorModel.body)
+    except Exception as e:
+        logger.exception(e)
+        res = requests.Response()
+        res.status_code = 0
+
     ret = ResultModel(status=res.status_code,
                       duration_ms=math.floor(
                           res.elapsed.total_seconds()*1000),
                       time=datetime.now(),
-                      content=res.text,
+                      content='' if res.text is None else res.text,
                       headers=res.headers)
 
     db[MONITORS_COLLECTION_NAME].update_one(
