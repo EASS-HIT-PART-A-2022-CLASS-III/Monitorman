@@ -12,7 +12,7 @@ class UpdateMonitorModel(BaseModel):
     expected_status: Optional[int]
     expected_result_regex: Optional[str]
     expected_headers_regex: Optional[Dict[str, str]]
-    max_duration_ms: Optional[int]
+    expected_max_duration_ms: Optional[int]
     minute_interval: Optional[Literal[1, 2, 5, 10, 30, 60]]
 
     class Config:
@@ -27,7 +27,7 @@ class UpdateMonitorModel(BaseModel):
                 "expected_status": 200,
                 "expected_result_regex": "^.+$",
                 "expected_headers_regex": {},
-                "max_duration_ms": 60*1000,
+                "expected_max_duration_ms": 60*1000,
                 "minute_interval": 5,
             }
         }

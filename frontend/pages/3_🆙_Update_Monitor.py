@@ -31,25 +31,34 @@ else:
         st.session_state['initialized'] = True
 
         for key in monitor_val:
-            st.session_state[key] = monitor_val[key]
+            st.session_state[f'update_{key}'] = monitor_val[key]
 
-    st.text_area("Description", key='description')
-    st.text_input("Url", key="url")
-    st.text_area("Body", key="body")
-    st.selectbox("Method", ["GET", "POST", "PUT", "DELETE"], key='method')
+    st.text_area("Description", key="update_description")
+    st.text_input("Url", key="update_url")
+    st.text_area("Body", key="update_body")
+    st.selectbox("Method", ["GET", "POST", "PUT",
+                 "DELETE"], key="update_method")
     st.selectbox("Interval (Minutes)", [
-        1, 2, 5, 10, 30, 60], key='minute_interval')
+        1, 2, 5, 10, 30, 60], key="update_minute_interval")
 
-    st.number_input("Expected Status", step=1, min_value=0, value=200, key='expected_status'
-                    )
+    st.number_input("Expected Status", step=1,
+                    min_value=0, key="update_expected_status")
+    st.text_input("Expected Result Regex", key="update_expected_result_regex")
 
     # Every form must have a submit button.
     submitted = st.button("Submit")
 
     if submitted:
+        send_obj = {}
+        as_dict = st.session_state.to_dict()
+
+        for key in as_dict:
+            if key.startswith('update_'):
+                send_obj[key.removeprefix('update_')] = as_dict[key]
+
         res = requests.put(
             f'{os.getenv("BACKEND_URL")}/monitors/v1/{monitor_val["_id"]}',
-            json=st.session_state.to_dict(),
+            json=send_obj,
         )
 
         if res.status_code == 200:
