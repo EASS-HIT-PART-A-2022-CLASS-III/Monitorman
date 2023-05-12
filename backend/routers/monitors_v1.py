@@ -26,6 +26,22 @@ def get_monitors(with_results: bool, client: pymongo.MongoClient = Depends(get_p
     return monitors
 
 
+@router.get("/clear_results/{monitor_id}", response_model=list[MonitorModel])
+def clear_results(monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)) -> MonitorModel:
+    db = client[MONGO_DB_NAME]
+
+    db[MONITORS_COLLECTION_NAME].update_one(
+        {"_id": monitor_id}, {"$set": {'results': []}})
+
+    if (
+        updated_monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": monitor_id})
+    ) is not None:
+        return updated_monitor
+
+    raise HTTPException(
+        status_code=404, detail=f"Monitor {monitor_id} not found")
+
+
 @router.get("/{monitor_id}", response_model=MonitorModel)
 def get_monitor(monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)) -> MonitorModel:
     db = client[MONGO_DB_NAME]

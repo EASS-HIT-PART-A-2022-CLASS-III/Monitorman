@@ -50,6 +50,9 @@ else:
                     min_value=0, key="update_expected_status")
     st.text_input("Expected Result Regex", key="update_expected_result_regex")
 
+    st.number_input("Expected Max Duration(ms)", step=1, min_value=0,
+                    key="update_expected_max_duration_ms")
+
     # Every form must have a submit button.
     submitted = st.button("Submit")
 

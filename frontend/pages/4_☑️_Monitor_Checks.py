@@ -50,8 +50,37 @@ if len(monitors) == 0:
 else:
     monitor_val = st.selectbox(
         "Monitor", monitors, format_func=get_monitor_desc)
-    select_monitor = st.button('Select Monitor')
+
+    cols = st.columns((1, 1, 1, 1))
+
+    select_monitor = cols[0].button('Show Monitor Results')
 
     if select_monitor:
-        df = pd.DataFrame(data=monitor_val['results'])
-        st.dataframe(df.style.apply(color_results, axis=1))
+        results = monitor_val['results']
+
+        if len(results) == 0:
+            st.warning('Monitor has no results yet')
+        else:
+            df = pd.DataFrame(data=results)
+            st.dataframe(df.style.apply(color_results, axis=1))
+
+    delete_val = cols[1].button('Delete Monitor')
+
+    if delete_val:
+        requests.delete(
+            f'{os.getenv("BACKEND_URL")}/monitors/v1/{monitor_val["_id"]}')
+        st.experimental_rerun()
+
+    trigger_val = cols[2].button('Trigger Monitor')
+
+    if trigger_val:
+        requests.get(
+            f'{os.getenv("SCHEDULER_URL")}/scheduler/v1/{monitor_val["_id"]}')
+        st.experimental_rerun()
+
+    clear_results_val = cols[3].button('Clear Monitor Results')
+
+    if clear_results_val:
+        requests.get(
+            f'{os.getenv("BACKEND_URL")}/monitors/v1/clear_results/{monitor_val["_id"]}')
+        st.experimental_rerun()

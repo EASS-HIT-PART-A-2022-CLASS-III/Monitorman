@@ -13,26 +13,20 @@ st.title("Monitors")
 monitors = requests.get(
     f'{os.getenv("BACKEND_URL")}/monitors/v1/getmonitors/false').json()
 
-for monitor in monitors:
-    del monitor['results']
+if len(monitors) == 0:
+    st.warning('No monitors to display')
+else:
+    for monitor in monitors:
+        del monitor['results']
 
-df = pd.DataFrame(data=monitors)
+        # trigger_col = cols[-1].empty()
 
-st.dataframe(df)
+        # trigger_action = trigger_col.button(
+        #     'Trigger', key='table_button_trigger_'+monitor['_id'])
 
-# delete_action = delete_col.button(
-#     'Delete', key='table_button_delete_'+monitor['_id'])
+        # if trigger_action:
+        #     requests.get(
+        #         f'{os.getenv("SCHEDULER_URL")}/scheduler/v1/{monitor["_id"]}')
 
-# if delete_action:
-#     requests.delete(
-#         f'{os.getenv("BACKEND_URL")}/monitors/v1/{monitor["_id"]}')
-#     st.experimental_rerun()
-
-# trigger_col = cols[-1].empty()
-
-# trigger_action = trigger_col.button(
-#     'Trigger', key='table_button_trigger_'+monitor['_id'])
-
-# if trigger_action:
-#     requests.get(
-#         f'{os.getenv("SCHEDULER_URL")}/scheduler/v1/{monitor["_id"]}')
+    df = pd.DataFrame(data=monitors)
+    st.dataframe(df)
