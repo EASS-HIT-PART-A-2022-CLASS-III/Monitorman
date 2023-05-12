@@ -55,15 +55,15 @@ def test_create_two_and_schedule_all(monkeypatch, example_monitor_dict):
         m: requests_mock.Mocker
         m.get(re.compile('/scheduler/*'),
               json=proxy_scheduler_client(scheduler_client))
-        response = backend_client.post('/monitors', json=example_monitor_dict)
+        response = backend_client.post('/monitors/v1', json=example_monitor_dict)
 
         assert response.status_code == 201
 
-        response = backend_client.post('/monitors', json=example_monitor_dict)
+        response = backend_client.post('/monitors/v1', json=example_monitor_dict)
 
         assert response.status_code == 201
 
-    response = scheduler_client.get('/scheduler')
+    response = scheduler_client.get('/scheduler/v1')
 
     assert response.status_code == 200
     assert len(response.json()) == 2
@@ -79,7 +79,7 @@ def test_create_and_delete_monitor(monkeypatch, example_monitor_dict):
         m: requests_mock.Mocker
         m.get(re.compile('/scheduler/*'),
               json=proxy_scheduler_client(scheduler_client))
-        response = backend_client.post('/monitors', json=example_monitor_dict)
+        response = backend_client.post('/monitors/v1', json=example_monitor_dict)
 
     assert response.status_code == 201
 
@@ -87,7 +87,7 @@ def test_create_and_delete_monitor(monkeypatch, example_monitor_dict):
 
     assert len(result['results']) == 1
 
-    response = backend_client.delete(f'/monitors/{result["_id"]}')
+    response = backend_client.delete(f'/monitors/v1/{result["_id"]}')
 
     assert response.status_code == 204
 

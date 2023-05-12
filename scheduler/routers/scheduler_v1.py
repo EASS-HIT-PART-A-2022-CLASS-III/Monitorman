@@ -16,7 +16,7 @@ logger = logging.getLogger('app')
 
 load_dotenv('./scheduler/.env')
 
-router = APIRouter(prefix="/scheduler", tags=["scheduler"])
+router = APIRouter(prefix="/scheduler/v1", tags=["scheduler"])
 
 
 @router.on_event('startup')

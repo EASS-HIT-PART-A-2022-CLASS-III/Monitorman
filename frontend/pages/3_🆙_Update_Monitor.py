@@ -10,7 +10,7 @@ st.set_page_config(page_title="Update Monitor", page_icon="🆙")
 st.title("Update Monitor")
 
 monitors = requests.get(
-    f'{os.getenv("BACKEND_URL")}/monitors/getmonitors/false').json()
+    f'{os.getenv("BACKEND_URL")}/monitors/v1/getmonitors/false').json()
 
 
 def get_monitor_desc(monitor):
@@ -38,7 +38,7 @@ else:
     st.text_area("Body", key="body")
     st.selectbox("Method", ["GET", "POST", "PUT", "DELETE"], key='method')
     st.selectbox("Interval (Minutes)", [
-        1, 2, 5, 10, 30, 60], key='minute_interval', index=2)
+        1, 2, 5, 10, 30, 60], key='minute_interval')
 
     st.number_input("Expected Status", step=1, min_value=0, value=200, key='expected_status'
                     )
@@ -48,7 +48,7 @@ else:
 
     if submitted:
         res = requests.put(
-            f'{os.getenv("BACKEND_URL")}/monitors/{monitor_val["_id"]}',
+            f'{os.getenv("BACKEND_URL")}/monitors/v1/{monitor_val["_id"]}',
             json=st.session_state.to_dict(),
         )
 

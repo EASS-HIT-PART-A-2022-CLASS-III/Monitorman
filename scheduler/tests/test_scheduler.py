@@ -25,7 +25,7 @@ def run_around_tests():
 def test_id_not_found():
     nonexistent_id = '12345678'
     client = TestClient(app)
-    response = client.get(f'/scheduler/{nonexistent_id}')
+    response = client.get(f'/scheduler/v1/{nonexistent_id}')
 
     assert response.status_code == 404
     assert response.json()['detail'] == f"Monitor {nonexistent_id} not found"
@@ -39,14 +39,14 @@ def test_monitor_success():
         {"url": "http://httpbin.org/get", "method": "GET", "_id": monitor_id})
 
     client = TestClient(app)
-    response = client.get(f'/scheduler/{monitor_id}')
+    response = client.get(f'/scheduler/v1/{monitor_id}')
 
     assert response.status_code == 200
 
 
 def test_trigger_all_empty():
     client = TestClient(app)
-    response = client.get('/scheduler/')
+    response = client.get('/scheduler/v1/')
 
     assert response.status_code == 200
     assert response.json() == []

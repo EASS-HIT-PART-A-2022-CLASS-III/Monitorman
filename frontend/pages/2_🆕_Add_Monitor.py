@@ -23,7 +23,7 @@ submitted = st.button("Submit")
 
 if submitted:
     res = requests.post(
-        f'{os.getenv("BACKEND_URL")}/monitors', json=st.session_state.to_dict()
+        f'{os.getenv("BACKEND_URL")}/monitors/v1', json=st.session_state.to_dict()
     )
 
     if res.status_code == 201:

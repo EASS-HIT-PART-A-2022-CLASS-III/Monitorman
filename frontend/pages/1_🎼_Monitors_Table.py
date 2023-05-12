@@ -11,7 +11,7 @@ st.set_page_config(page_title="Monitors", page_icon="🎼")
 st.title("Monitors")
 
 monitors = requests.get(
-    f'{os.getenv("BACKEND_URL")}/monitors/getmonitors/false').json()
+    f'{os.getenv("BACKEND_URL")}/monitors/v1/getmonitors/false').json()
 
 cols = st.columns((1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 2))
 
@@ -35,5 +35,5 @@ for x, monitor in enumerate(monitors):
 
     if delete_action:
         requests.delete(
-            f'{os.getenv("BACKEND_URL")}/monitors/{monitor["_id"]}')
+            f'{os.getenv("BACKEND_URL")}/monitors/v1/{monitor["_id"]}')
         st.experimental_rerun()

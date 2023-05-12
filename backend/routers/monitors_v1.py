@@ -14,7 +14,7 @@ from ..models import UpdateMonitorModel
 
 load_dotenv('./backend/.env')
 
-router = APIRouter(prefix="/monitors", tags=["monitors"])
+router = APIRouter(prefix="/monitors/v1", tags=["monitors"])
 
 
 @router.get("/getmonitors/{with_results}", response_model=list[MonitorModel])
@@ -44,7 +44,7 @@ def create_monitor(response: Response, client: pymongo.MongoClient = Depends(get
     new_monitor = db[MONITORS_COLLECTION_NAME].insert_one(monitor)
 
     requests.get(
-        f'{os.getenv("SCHEDULER_URL")}/scheduler/{new_monitor.inserted_id}')
+        f'{os.getenv("SCHEDULER_URL")}/scheduler/v1/{new_monitor.inserted_id}')
 
     created_monitor = db[MONITORS_COLLECTION_NAME].find_one(
         {"_id": new_monitor.inserted_id})
@@ -64,7 +64,7 @@ def update_monitor(id: str, client: pymongo.MongoClient = Depends(get_prod_clien
             {"_id": id}, {"$set": monitor})
 
         if update_result.modified_count == 1:
-            requests.get(f'{os.getenv("SCHEDULER_URL")}/scheduler/{id}')
+            requests.get(f'{os.getenv("SCHEDULER_URL")}/scheduler/v1/{id}')
 
             if (
                 updated_monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": id})

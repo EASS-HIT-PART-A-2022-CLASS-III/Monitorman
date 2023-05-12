@@ -64,7 +64,7 @@ def example_update_monitor():
 
 def test_now_allowed():
     client = TestClient(app)
-    response = client.post('/monitors/getmonitors/false')
+    response = client.post('/monitors/v1/getmonitors/false')
 
     assert response.status_code == 405
 
@@ -76,7 +76,7 @@ def test_with_results(example_monitor, with_results, results_len):
     collection.insert_one(example_monitor)
 
     client = TestClient(app)
-    response = client.get(f'/monitors/getmonitors/{with_results}')
+    response = client.get(f'/monitors/v1/getmonitors/{with_results}')
     result = response.json()
 
     assert response.status_code == 200
@@ -89,7 +89,7 @@ def test_update_nonexistent(example_update_monitor):
 
     client = TestClient(app)
     response = client.put(
-        f'/monitors/{nonexistent_id}', json=example_update_monitor)
+        f'/monitors/v1/{nonexistent_id}', json=example_update_monitor)
 
     assert response.status_code == 404
     assert response.json()['detail'] == f"Monitor {nonexistent_id} not found"
@@ -103,7 +103,7 @@ def test_update(example_monitor, example_monitor_id, example_update_monitor):
     client = TestClient(app)
 
     response = client.put(
-        f'/monitors/{example_monitor_id}', json=example_update_monitor)
+        f'/monitors/v1/{example_monitor_id}', json=example_update_monitor)
 
     assert response.status_code == 200
 
@@ -116,7 +116,7 @@ def test_update(example_monitor, example_monitor_id, example_update_monitor):
 
 def test_id_not_found(example_monitor_id):
     client = TestClient(app)
-    response = client.get(f'/monitors/{example_monitor_id}')
+    response = client.get(f'/monitors/v1/{example_monitor_id}')
 
     assert response.status_code == 404
     assert response.json()[
@@ -125,7 +125,7 @@ def test_id_not_found(example_monitor_id):
 
 def test_get_monitors_empty():
     client = TestClient(app)
-    response = client.get('/monitors/getmonitors/false')
+    response = client.get('/monitors/v1/getmonitors/false')
 
     assert response.status_code == 200
     assert response.json() == []
@@ -137,7 +137,7 @@ def test_create_monitor(example_monitor):
 
     client = TestClient(app)
     response = client.post(
-        f'/monitors', json=json.loads(json.dumps(example_monitor, default=str)))
+        f'/monitors/v1', json=json.loads(json.dumps(example_monitor, default=str)))
 
     assert response.status_code == 201
 
@@ -154,7 +154,7 @@ def test_get_monitor(example_monitor, example_monitor_id):
 
     client = TestClient(app)
 
-    response = client.get(f'/monitors/{example_monitor_id}')
+    response = client.get(f'/monitors/v1/{example_monitor_id}')
 
     assert response.status_code == 200
     assert response.json()['_id'] == example_monitor_id
@@ -167,6 +167,6 @@ def test_delete_monitor(example_monitor, example_monitor_id):
 
     client = TestClient(app)
 
-    response = client.delete(f'/monitors/{example_monitor_id}')
+    response = client.delete(f'/monitors/v1/{example_monitor_id}')
 
     assert response.status_code == 204
