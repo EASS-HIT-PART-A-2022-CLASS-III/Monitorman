@@ -7,7 +7,8 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from fastapi.encoders import jsonable_encoder
 
 from shared.models import MonitorModel
-from shared.mongo import MONGO_DB_NAME, MONITORS_COLLECTION_NAME, get_prod_client
+from shared.mongo import (MONGO_DB_NAME, MONITORS_COLLECTION_NAME,
+                          get_prod_client)
 
 from ..models import UpdateMonitorModel
 

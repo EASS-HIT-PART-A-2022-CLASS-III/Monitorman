@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Dict, Literal, Optional
+from typing import Annotated, Dict, Literal, Optional
 
 from bson import ObjectId
+from fastapi import Query
 from pydantic import BaseModel, Field
 
 from .dependencies import PyObjectId
@@ -18,7 +19,9 @@ class ResultModel(BaseModel):
 class MonitorModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     description: str = ''
-    url: str
+    url: Annotated[
+        str | None, Query(min_length=1, regex="^https?://")
+    ]
     method: Literal['GET', 'POST', 'PUT', 'DELETE']
     body: str = ''
     expected_status: Optional[int]

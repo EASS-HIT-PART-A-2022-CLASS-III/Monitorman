@@ -1,14 +1,15 @@
 import datetime
 import json
 import re
+
 import mongomock
-from fastapi.testclient import TestClient
-from pydantic import BaseModel
 import pytest
+from fastapi.testclient import TestClient
+
 from backend.models import UpdateMonitorModel
 from shared.models import MonitorModel, ResultModel
-
-from shared.mongo import MONGO_DB_NAME, MONITORS_COLLECTION_NAME, get_prod_client
+from shared.mongo import (MONGO_DB_NAME, MONITORS_COLLECTION_NAME,
+                          get_prod_client)
 
 from ..main import app
 

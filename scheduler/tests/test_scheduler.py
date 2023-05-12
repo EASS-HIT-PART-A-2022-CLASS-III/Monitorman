@@ -1,8 +1,9 @@
 import mongomock
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
-from shared.mongo import MONGO_DB_NAME, MONITORS_COLLECTION_NAME, get_prod_client
+from shared.mongo import (MONGO_DB_NAME, MONITORS_COLLECTION_NAME,
+                          get_prod_client)
 
 from ..main import app
 

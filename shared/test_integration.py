@@ -1,15 +1,16 @@
 import re
+
 import mongomock
-from fastapi.testclient import TestClient
 import pytest
 import requests
-from backend.main import app as backend_app
-from scheduler.main import app as scheduler_app
 import requests_mock
+from fastapi.testclient import TestClient
 from requests_mock.request import _RequestObjectProxy
 from requests_mock.response import _Context
-from shared.models import MonitorModel
 
+from backend.main import app as backend_app
+from scheduler.main import app as scheduler_app
+from shared.models import MonitorModel
 from shared.mongo import MONGO_DB_NAME, get_prod_client
 
 mongo_test_client = mongomock.MongoClient()
