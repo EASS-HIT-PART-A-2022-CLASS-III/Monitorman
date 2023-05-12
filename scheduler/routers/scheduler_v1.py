@@ -80,7 +80,8 @@ def check_and_save(client: pymongo.MongoClient, monitorModel: MonitorModel):
                           res.elapsed.total_seconds()*1000),
                       time=datetime.now(),
                       content='' if res.text is None else res.text,
-                      headers=res.headers)
+                      headers=res.headers,
+                      checked_with=monitorModel.checks)
 
     db[MONITORS_COLLECTION_NAME].update_one(
         {"_id": str(monitorModel.id)}, {'$push': {'results': {'$each': [ret.dict()], '$position': 0}}}, upsert=True)

@@ -10,7 +10,7 @@ from requests_mock.response import _Context
 
 from backend.main import app as backend_app
 from scheduler.main import app as scheduler_app
-from shared.models import MonitorModel
+from shared.models import CheckModel, MonitorModel
 from shared.mongo import MONGO_DB_NAME, get_prod_client
 
 mongo_test_client = mongomock.MongoClient()
@@ -36,7 +36,7 @@ def example_monitor_dict():
         url="http://httpbin.org/post",
         method="POST",
         body="{\"hello\":\"world\"}",
-        expected_status=200
+        checks=CheckModel(expected_status=200)
     ).dict()
 
     for field in ['id', 'results']+[field for field in monitor if monitor[field] is None]:
@@ -55,11 +55,13 @@ def test_create_two_and_schedule_all(monkeypatch, example_monitor_dict):
         m: requests_mock.Mocker
         m.get(re.compile('/scheduler/*'),
               json=proxy_scheduler_client(scheduler_client))
-        response = backend_client.post('/monitors/v1', json=example_monitor_dict)
+        response = backend_client.post(
+            '/monitors/v1', json=example_monitor_dict)
 
         assert response.status_code == 201
 
-        response = backend_client.post('/monitors/v1', json=example_monitor_dict)
+        response = backend_client.post(
+            '/monitors/v1', json=example_monitor_dict)
 
         assert response.status_code == 201
 
@@ -79,7 +81,8 @@ def test_create_and_delete_monitor(monkeypatch, example_monitor_dict):
         m: requests_mock.Mocker
         m.get(re.compile('/scheduler/*'),
               json=proxy_scheduler_client(scheduler_client))
-        response = backend_client.post('/monitors/v1', json=example_monitor_dict)
+        response = backend_client.post(
+            '/monitors/v1', json=example_monitor_dict)
 
     assert response.status_code == 201
 

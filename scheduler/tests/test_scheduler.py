@@ -36,7 +36,7 @@ def test_monitor_success():
     collection = db[MONITORS_COLLECTION_NAME]
     monitor_id = "666f6f2d6261722d71757578"
     collection.insert_one(
-        {"url": "http://httpbin.org/get", "method": "GET", "_id": monitor_id})
+        {"url": "http://httpbin.org/get", "method": "GET", "_id": monitor_id, "checks": {}})
 
     client = TestClient(app)
     response = client.get(f'/scheduler/v1/{monitor_id}')

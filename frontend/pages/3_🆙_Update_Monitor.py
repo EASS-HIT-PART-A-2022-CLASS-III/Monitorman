@@ -31,7 +31,12 @@ else:
         st.session_state['initialized'] = True
 
         for key in monitor_val:
-            st.session_state[f'update_{key}'] = monitor_val[key]
+            if key == 'checks':
+                for check in monitor_val[key]:
+                    if monitor_val[key][check] is not None:
+                        st.session_state[f'update_{check}'] = monitor_val[key][check]
+            else:
+                st.session_state[f'update_{key}'] = monitor_val[key]
 
     st.text_area("Description", key="update_description")
     st.text_input("Url", key="update_url")
@@ -54,7 +59,16 @@ else:
 
         for key in as_dict:
             if key.startswith('update_'):
-                send_obj[key.removeprefix('update_')] = as_dict[key]
+                if 'expected_' in key:
+                    if send_obj.get('checks') is None:
+                        send_obj['checks'] = {}
+
+                    send_obj['checks'][key.removeprefix(
+                        'update_')] = as_dict[key]
+                else:
+                    send_obj[key.removeprefix('update_')] = as_dict[key]
+
+        print(send_obj)
 
         res = requests.put(
             f'{os.getenv("BACKEND_URL")}/monitors/v1/{monitor_val["_id"]}',

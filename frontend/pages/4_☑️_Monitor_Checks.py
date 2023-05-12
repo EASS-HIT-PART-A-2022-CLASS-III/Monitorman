@@ -25,17 +25,20 @@ def result_to_color(res):
 
 
 def color_results(val):
+    checked_with = val['checked_with']
+
     results = []
     results.append(result_to_color(
-        val['status'] == monitor_val['expected_status']))
+        val['status'] == checked_with['expected_status']))
     results.append('')
-    results.append(result_to_color(monitor_val['expected_max_duration_ms'] is None or
-                                   val['duration_ms'] <= monitor_val['expected_max_duration_ms']))
+    results.append(result_to_color(checked_with['expected_max_duration_ms'] is None or
+                                   val['duration_ms'] <= checked_with['expected_max_duration_ms']))
 
-    results.append(result_to_color(monitor_val['expected_result_regex'] is None or
-                                   0 < len(re.findall(monitor_val['expected_result_regex'], val['content'], re.DOTALL))))
+    results.append(result_to_color(checked_with['expected_result_regex'] is None or
+                                   0 < len(re.findall(checked_with['expected_result_regex'], val['content'], re.DOTALL))))
     results.append(result_to_color(
-        val['status'] == monitor_val['expected_status']))
+        val['status'] == checked_with['expected_status']))
+    results.append('')
 
     return results
 

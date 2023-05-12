@@ -8,12 +8,20 @@ from pydantic import BaseModel, Field
 from .dependencies import PyObjectId
 
 
+class CheckModel(BaseModel):
+    expected_status: Optional[int]
+    expected_result_regex: Optional[str]
+    expected_headers_regex: Optional[Dict[str, str]]
+    expected_max_duration_ms: Optional[int]
+
+
 class ResultModel(BaseModel):
     status: int
     time: datetime
     duration_ms: int
     content: str
     headers: Dict[str, str]
+    checked_with: CheckModel
 
 
 class MonitorModel(BaseModel):
@@ -24,10 +32,7 @@ class MonitorModel(BaseModel):
     ]
     method: Literal['GET', 'POST', 'PUT', 'DELETE']
     body: str = ''
-    expected_status: Optional[int]
-    expected_result_regex: Optional[str]
-    expected_headers_regex: Optional[Dict[str, str]]
-    expected_max_duration_ms: Optional[int]
+    checks: CheckModel
     results: Optional[list[ResultModel]] = []
     minute_interval: Literal[1, 2, 5, 10, 30, 60] = 5
 
@@ -41,10 +46,12 @@ class MonitorModel(BaseModel):
                 "url": "http://httpbin.org/post",
                 "method": "POST",
                 "body": "{\"hello\":\"world\"}",
-                "expected_status": 200,
-                "expected_result_regex": "^.+$",
-                "expected_headers_regex": {},
-                "expected_max_duration_ms": 60*1000,
+                "checks": {
+                    "expected_status": 200,
+                    "expected_result_regex": "^.+$",
+                    "expected_headers_regex": {},
+                    "expected_max_duration_ms": 60*1000,
+                },
                 "minute_interval": 5,
             }
         }

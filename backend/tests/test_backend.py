@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.models import UpdateMonitorModel
-from shared.models import MonitorModel, ResultModel
+from shared.models import CheckModel, MonitorModel, ResultModel
 from shared.mongo import (MONGO_DB_NAME, MONITORS_COLLECTION_NAME,
                           get_prod_client)
 
@@ -41,9 +41,9 @@ def example_monitor(example_monitor_id):
         url="http://httpbin.org/post",
         method="POST",
         body="{\"hello\":\"world\"}",
-        expected_status=200,
+        checks=CheckModel(expected_status=200),
         results=[ResultModel(status=200, time=datetime.datetime.now(), content='wow',
-                             duration_ms=5000, headers={})]
+                             duration_ms=5000, headers={}, checked_with=CheckModel(expected_status=200))]
     ).dict()
 
     monitor['_id'] = example_monitor_id
@@ -58,7 +58,7 @@ def example_update_monitor():
         url="http://httpbin.org/get",
         method="GET",
         body="",
-        expected_status=404
+        checks=CheckModel(expected_status=404)
     ).dict()
 
 

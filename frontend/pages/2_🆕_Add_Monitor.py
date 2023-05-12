@@ -29,7 +29,14 @@ if submitted:
 
     for key in as_dict:
         if key.startswith('add_'):
-            send_obj[key.removeprefix('add_')] = as_dict[key]
+            if 'expected_' in key:
+                if send_obj.get('checks') is None:
+                    send_obj['checks'] = {}
+
+                send_obj['checks'][key.removeprefix(
+                    'add_')] = as_dict[key]
+            else:
+                send_obj[key.removeprefix('add_')] = as_dict[key]
 
     res = requests.post(
         f'{os.getenv("BACKEND_URL")}/monitors/v1', json=send_obj)
