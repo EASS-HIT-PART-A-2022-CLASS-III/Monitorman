@@ -19,6 +19,7 @@ if len(monitors) == 0:
 else:
     for monitor in monitors:
         del monitor["results"]
+        del monitor["_id"]
 
     df = pd.DataFrame(data=monitors)
     st.dataframe(df)
