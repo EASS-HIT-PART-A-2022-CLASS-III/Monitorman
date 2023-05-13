@@ -7,77 +7,97 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
 from fastapi.encoders import jsonable_encoder
 
 from shared.models import MonitorModel
-from shared.mongo import (MONGO_DB_NAME, MONITORS_COLLECTION_NAME,
-                          get_prod_client)
+from shared.mongo import MONGO_DB_NAME, MONITORS_COLLECTION_NAME, get_prod_client
 
 from ..models import UpdateMonitorModel
 
-load_dotenv('./backend/.env')
+load_dotenv("./backend/.env")
 
 router = APIRouter(prefix="/monitors/v1", tags=["monitors"])
 
 
 @router.get("/getmonitors/{with_results}", response_model=list[MonitorModel])
-def get_monitors(with_results: bool, client: pymongo.MongoClient = Depends(get_prod_client)) -> list[MonitorModel]:
+def get_monitors(
+    with_results: bool, client: pymongo.MongoClient = Depends(get_prod_client)
+) -> list[MonitorModel]:
     db = client[MONGO_DB_NAME]
-    monitors = list(db[MONITORS_COLLECTION_NAME].find(
-        {}, projection={} if with_results else {'results': False}))
+    monitors = list(
+        db[MONITORS_COLLECTION_NAME].find(
+            {}, projection={} if with_results else {"results": False}
+        )
+    )
 
     return monitors
 
 
 @router.get("/clear_results/{monitor_id}", response_model=list[MonitorModel])
-def clear_results(monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)) -> MonitorModel:
+def clear_results(
+    monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)
+) -> MonitorModel:
     db = client[MONGO_DB_NAME]
 
     db[MONITORS_COLLECTION_NAME].update_one(
-        {"_id": monitor_id}, {"$set": {'results': []}})
+        {"_id": monitor_id}, {"$set": {"results": []}}
+    )
 
     if (
         updated_monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": monitor_id})
     ) is not None:
         return updated_monitor
 
-    raise HTTPException(
-        status_code=404, detail=f"Monitor {monitor_id} not found")
+    raise HTTPException(status_code=404, detail=f"Monitor {monitor_id} not found")
 
 
 @router.get("/{monitor_id}", response_model=MonitorModel)
-def get_monitor(monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)) -> MonitorModel:
+def get_monitor(
+    monitor_id: str, client: pymongo.MongoClient = Depends(get_prod_client)
+) -> MonitorModel:
     db = client[MONGO_DB_NAME]
 
-    if (monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": monitor_id})) is not None:
+    if (
+        monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": monitor_id})
+    ) is not None:
         return MonitorModel.parse_obj(monitor)
 
-    raise HTTPException(
-        status_code=404, detail=f"Monitor {monitor_id} not found")
+    raise HTTPException(status_code=404, detail=f"Monitor {monitor_id} not found")
 
 
 @router.post("/", response_description="Add new monitor", response_model=MonitorModel)
-def create_monitor(response: Response, client: pymongo.MongoClient = Depends(get_prod_client), monitor: MonitorModel = Body(...)):
+def create_monitor(
+    response: Response,
+    client: pymongo.MongoClient = Depends(get_prod_client),
+    monitor: MonitorModel = Body(...),
+):
     db = client[MONGO_DB_NAME]
     monitor = jsonable_encoder(monitor)
     new_monitor = db[MONITORS_COLLECTION_NAME].insert_one(monitor)
 
-    requests.get(
-        f'{os.getenv("SCHEDULER_URL")}/scheduler/v1/{new_monitor.inserted_id}')
+    requests.get(f'{os.getenv("SCHEDULER_URL")}/scheduler/v1/{new_monitor.inserted_id}')
 
     created_monitor = db[MONITORS_COLLECTION_NAME].find_one(
-        {"_id": new_monitor.inserted_id})
+        {"_id": new_monitor.inserted_id}
+    )
 
     response.status_code = status.HTTP_201_CREATED
 
     return created_monitor
 
 
-@router.put("/{id}", response_description="Update a monitor", response_model=MonitorModel)
-def update_monitor(id: str, client: pymongo.MongoClient = Depends(get_prod_client), monitor: UpdateMonitorModel = Body(...)):
+@router.put(
+    "/{id}", response_description="Update a monitor", response_model=MonitorModel
+)
+def update_monitor(
+    id: str,
+    client: pymongo.MongoClient = Depends(get_prod_client),
+    monitor: UpdateMonitorModel = Body(...),
+):
     db = client[MONGO_DB_NAME]
     monitor = {k: v for k, v in monitor.dict().items() if v is not None}
 
     if len(monitor) >= 1:
         update_result = db[MONITORS_COLLECTION_NAME].update_one(
-            {"_id": id}, {"$set": monitor})
+            {"_id": id}, {"$set": monitor}
+        )
 
         if update_result.modified_count == 1:
             requests.get(f'{os.getenv("SCHEDULER_URL")}/scheduler/v1/{id}')
@@ -87,7 +107,9 @@ def update_monitor(id: str, client: pymongo.MongoClient = Depends(get_prod_clien
             ) is not None:
                 return updated_monitor
 
-    if (existing_monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": id})) is not None:
+    if (
+        existing_monitor := db[MONITORS_COLLECTION_NAME].find_one({"_id": id})
+    ) is not None:
         return existing_monitor
 
     raise HTTPException(status_code=404, detail=f"Monitor {id} not found")

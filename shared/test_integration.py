@@ -35,60 +35,57 @@ def example_monitor_dict():
         description="this is a test monitor",
         url="http://httpbin.org/post",
         method="POST",
-        body="{\"hello\":\"world\"}",
-        checks=CheckModel(expected_status=200)
+        body='{"hello":"world"}',
+        checks=CheckModel(expected_status=200),
     ).dict()
 
-    for field in ['id', 'results']+[field for field in monitor if monitor[field] is None]:
+    for field in ["id", "results"] + [
+        field for field in monitor if monitor[field] is None
+    ]:
         monitor.pop(field)
 
     return monitor
 
 
 def test_create_two_and_schedule_all(monkeypatch, example_monitor_dict):
-    backend_client = TestClient(backend_app, 'http://localhost:8000')
-    scheduler_client = TestClient(scheduler_app, 'http://localhost:8001')
+    backend_client = TestClient(backend_app, "http://localhost:8000")
+    scheduler_client = TestClient(scheduler_app, "http://localhost:8001")
 
-    monkeypatch.setattr(requests, 'request', mock_request)
+    monkeypatch.setattr(requests, "request", mock_request)
 
     with requests_mock.Mocker(real_http=True) as m:
         m: requests_mock.Mocker
-        m.get(re.compile('/scheduler/*'),
-              json=proxy_scheduler_client(scheduler_client))
-        response = backend_client.post(
-            '/monitors/v1', json=example_monitor_dict)
+        m.get(re.compile("/scheduler/*"), json=proxy_scheduler_client(scheduler_client))
+        response = backend_client.post("/monitors/v1", json=example_monitor_dict)
 
         assert response.status_code == 201
 
-        response = backend_client.post(
-            '/monitors/v1', json=example_monitor_dict)
+        response = backend_client.post("/monitors/v1", json=example_monitor_dict)
 
         assert response.status_code == 201
 
-    response = scheduler_client.get('/scheduler/v1')
+    response = scheduler_client.get("/scheduler/v1")
 
     assert response.status_code == 200
     assert len(response.json()) == 2
 
 
 def test_create_and_delete_monitor(monkeypatch, example_monitor_dict):
-    backend_client = TestClient(backend_app, 'http://localhost:8000')
-    scheduler_client = TestClient(scheduler_app, 'http://localhost:8001')
+    backend_client = TestClient(backend_app, "http://localhost:8000")
+    scheduler_client = TestClient(scheduler_app, "http://localhost:8001")
 
-    monkeypatch.setattr(requests, 'request', mock_request)
+    monkeypatch.setattr(requests, "request", mock_request)
 
     with requests_mock.Mocker(real_http=True) as m:
         m: requests_mock.Mocker
-        m.get(re.compile('/scheduler/*'),
-              json=proxy_scheduler_client(scheduler_client))
-        response = backend_client.post(
-            '/monitors/v1', json=example_monitor_dict)
+        m.get(re.compile("/scheduler/*"), json=proxy_scheduler_client(scheduler_client))
+        response = backend_client.post("/monitors/v1", json=example_monitor_dict)
 
     assert response.status_code == 201
 
     result = response.json()
 
-    assert len(result['results']) == 1
+    assert len(result["results"]) == 1
 
     response = backend_client.delete(f'/monitors/v1/{result["_id"]}')
 
@@ -107,4 +104,5 @@ def proxy_scheduler_client(client: TestClient):
         resp = client.get(request.path)
 
         return resp.json()
+
     return proxy

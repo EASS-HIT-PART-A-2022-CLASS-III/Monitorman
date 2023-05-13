@@ -26,12 +26,10 @@ class ResultModel(BaseModel):
 
 class MonitorModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    description: str = ''
-    url: Annotated[
-        str | None, Query(min_length=1, regex="^https?://")
-    ]
-    method: Literal['GET', 'POST', 'PUT', 'DELETE']
-    body: str = ''
+    description: str = ""
+    url: Annotated[str | None, Query(min_length=1, regex="^https?://")]
+    method: Literal["GET", "POST", "PUT", "DELETE"]
+    body: str = ""
     checks: CheckModel
     results: Optional[list[ResultModel]] = []
     minute_interval: Literal[1, 2, 5, 10, 30, 60] = 5
@@ -45,12 +43,12 @@ class MonitorModel(BaseModel):
                 "description": "short description of the monitor",
                 "url": "http://httpbin.org/post",
                 "method": "POST",
-                "body": "{\"hello\":\"world\"}",
+                "body": '{"hello":"world"}',
                 "checks": {
                     "expected_status": 200,
                     "expected_result_regex": "^.+$",
                     "expected_headers_regex": {},
-                    "expected_max_duration_ms": 60*1000,
+                    "expected_max_duration_ms": 60 * 1000,
                 },
                 "minute_interval": 5,
             }
