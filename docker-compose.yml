@@ -24,6 +24,9 @@ services:
       context: .
     ports:
       - 8002:80
+    environment:
+      - SCHEDULER_URL=http://scheduler
+      - BACKEND_URL=http://backend
   mongo:
     image: mongo
     restart: always
